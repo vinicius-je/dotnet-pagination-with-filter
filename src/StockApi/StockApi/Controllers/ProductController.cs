@@ -22,7 +22,7 @@ namespace StockApi.Controllers
             [FromQuery] int pageNumber = 1,
             [FromQuery] int pageSize = 25)
         {
-            if (pageSize > 500)
+            if (pageSize > 250)
             {
                 return BadRequest(new ApiResponse<ProductDto>(400, "Error: the page size limit is 500 records"));
             }
