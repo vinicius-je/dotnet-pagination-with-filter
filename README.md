@@ -270,3 +270,7 @@ namespace StockApi.Infrastructure.Repositories.Commons
     }
 }
 ```
+
+## How to Execute the Project
+- Define the **Docker Compose** as the **Statup Project**
+- Run the Project
