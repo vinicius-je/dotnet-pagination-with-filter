@@ -1,0 +1,18 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server
+    container_name: sqlserver
+    restart: always
+    environment:
+      SA_PASSWORD: "jKR2h7j94uOo"
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"
+
+  stockapi:
+    image: ${DOCKER_REGISTRY-}stockapi
+    build:
+      context: StockApi
+      dockerfile: Dockerfile
+    depends_on:
+      - sqlserver
