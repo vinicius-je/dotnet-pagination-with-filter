@@ -39,6 +39,8 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+app.UseCors();
+
 app.Run();
 
 void CreateDatabase(WebApplication app)
