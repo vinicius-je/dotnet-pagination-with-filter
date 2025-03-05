@@ -129,3 +129,144 @@ namespace StockApi.Response
     }
 }
 ```
+
+## Filter Query
+
+This class receives a query of the base entity type and a dictionary containing property names as keys and their corresponding values as query parameters.
+
+For each item in the dictionary, the class extracts the corresponding property from the entity, determines the actual value type, and creates a lambda expression. The lambda expression is constructed using the property, value, and a parameter, and is then returned as a WHERE condition for the query
+
+```csharp
+namespace StockApi.Infrastructure.Repositories.Commons
+{
+    public class BaseFilterQuery<TBaseEntity> :
+        IFilterQuery<TBaseEntity>
+        where TBaseEntity : BaseEntity
+    {
+        public IQueryable<TBaseEntity> Filter(IQueryable<TBaseEntity> query, Dictionary<string, string> filters)
+        {
+            foreach (var filter in filters)
+            {
+                // Product Property
+                var property = typeof(TBaseEntity).GetProperty(filter.Key);
+
+                if (property == null || filter.Value == null)
+                {
+                    // Go to next filter in Dictionary
+                    continue;
+                }
+
+                // Lambda parameter
+                var parameter = Expression.Parameter(typeof(TBaseEntity), "x");
+                // Lamda pamaeter + property (x.Property)
+                var propertyAccess = Expression.Property(parameter, property);
+                // Convert Type Value for the Type in used in Entity
+                object convertedValue = ConvertTypeValue(filter, property);
+                // Constant Expression
+                var constant = Expression.Constant(convertedValue);
+                // Define condition filter in query
+                Expression condition = SetQueryConditionFilter(property, propertyAccess, constant);
+                // Creates the full lamda expression, ex: x => x.Property.Contains(value)
+                var lambda = Expression.Lambda<Func<TBaseEntity, bool>>(condition, parameter);
+                // Set the lambda in the Where condition
+                query = query.Where(lambda);
+            }
+
+            return query;
+        }
+
+        private static Expression SetQueryConditionFilter(PropertyInfo property, MemberExpression propertyAccess, ConstantExpression constant)
+        {
+            Expression condition;
+
+            if (property.PropertyType == typeof(string))
+            {
+                // Set the Contains string method in the lamda expression
+                var containsMethod = typeof(string).GetMethod("Contains", new[] { typeof(string) })!;
+                // Ex: x.Property.Contains(value)
+                condition = Expression.Call(propertyAccess, containsMethod, constant);
+            }
+            else
+            {
+                // Set the Equals method in the lamda expression
+                condition = Expression.Equal(propertyAccess, constant);
+            }
+
+            return condition;
+        }
+
+        private static object ConvertTypeValue(KeyValuePair<string, string> filter, PropertyInfo property)
+        {
+            object? convertedValue = null;
+
+            if (property.PropertyType.IsEnum)
+            {
+                convertedValue = Enum.Parse(property.PropertyType, filter.Value, true);
+            }
+            else
+            {
+                convertedValue = Convert.ChangeType(filter.Value, property.PropertyType);
+            }
+
+            return convertedValue;
+        }
+    }
+}
+```
+
+## Pagination Query
+
+This class accepts the page number, page size, and a dictionary with the filter condition as optional parameters.
+
+If the dictionary contains data, the class executes the filtering logic using the previous functions.
+
+Then, based on the result of the conditional logic (optional), the total number of records is calculated. After that, the data is retrieved from the database, taking into account how many rows should be skipped and how many records need to be retrieved. The result is returned as a Pagination Response.
+
+```csharp
+namespace StockApi.Infrastructure.Repositories.Commons
+{
+    public class BasePaginationQuery<TBaseEntity, TDto> :
+        BaseFilterQuery<TBaseEntity>,
+        IPaginationQuery<TDto>,
+        IFilterQuery<TBaseEntity>
+        where TBaseEntity : BaseEntity
+        where TDto : BaseDto, new()
+
+    {
+        protected readonly AppDbContext _context;
+        protected readonly DbSet<TBaseEntity> _dbSet;
+
+        public BasePaginationQuery(AppDbContext context)
+        {
+            _context = context;
+            _dbSet = _context.Set<TBaseEntity>();
+        }
+
+        public async Task<PaginationResponse<TDto>> Pagination(int pageNumber, int pageSize, Dictionary<string, string>? filters)
+        {
+            var query = _dbSet.AsQueryable();
+
+            if (filters is not null)
+            {
+                query = this.Filter(query, filters);
+            }
+
+            var totalRecords = await query.CountAsync();
+
+            var products = await query
+                .AsNoTracking()
+                .Select(MapToProductDto())
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return new PaginationResponse<TDto>(products, pageNumber, pageSize, totalRecords);
+        }
+
+        private Expression<Func<TBaseEntity, TDto>> MapToProductDto()
+        {
+            return x => (TDto)new TDto().ConvertToDto(x);
+        }
+    }
+}
+```
