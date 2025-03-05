@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using StockApi.Infrastructure.Configuration;
 using StockApi.Infrastructure.Context;
 
@@ -35,4 +36,8 @@ void CreateDatabase(WebApplication app)
     var scoped = app.Services.CreateScope();
     var context = scoped.ServiceProvider.GetService<AppDbContext>();
     context?.Database.EnsureCreated();
+
+    var sqlFile = "./Scripts/inserts.sql";
+    var sql = File.ReadAllText(sqlFile);
+    context?.Database.ExecuteSqlRaw(sql);
 }
