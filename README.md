@@ -1,18 +1,20 @@
 
-## Pagination with filter implamentation
+<h1 align="center">
+Pagination with Filter
+</h1>
 
-Details:
+## Details:
  - Simple Pagination
  - Pagination With Filter
  - Multi Property filter
  - Custom Page Size
  - Limit of 250 Records Per Page
 
-Query example:
+## Query example:
 
 `https://localhost:51026/Product?Name=phone&pageNumber=1&pageSize=25`
 
-Response example:
+## Response example:
 
 ```json
 {
