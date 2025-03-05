@@ -13,6 +13,16 @@ builder.Services.AddSwaggerGen();
 // Database Condiguration
 builder.Services.ConfigureDbExtension(builder.Configuration);
 
+// CORS, Allow All
+builder.Services.AddCors(opt =>
+{
+    opt.AddDefaultPolicy(builder => builder
+        .AllowAnyOrigin()
+        .AllowAnyMethod()
+        .AllowAnyHeader()
+    );
+});
+
 var app = builder.Build();
 CreateDatabase(app);
 
