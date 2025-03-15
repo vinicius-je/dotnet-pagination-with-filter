@@ -27,6 +27,11 @@ namespace StockApi.Controllers
                 return BadRequest(new ApiResponse<ProductDto>(400, "Error: the page size limit is 500 records"));
             }
 
+            if (pageSize <= 0)
+            {
+                return BadRequest(new ApiResponse<ProductDto>(400, "Error: the page size can not be equals or below zero"));
+            }
+
             if (filters is not null && filters.Count >= 2)
             {
                 filters.Remove("pageNumber");

@@ -8,7 +8,7 @@ namespace StockApi.Domain.Dtos
     {
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public decimal Price { get; set; }
+        public string Price { get; set; } = string.Empty;
         public string Category { get; set; } = string.Empty;
         public int Quantity { get; set; }
 
@@ -20,7 +20,7 @@ namespace StockApi.Domain.Dtos
             Name = p.Name;
             Category = p.Category.ToString();
             Description = p.Description;
-            Price = p.Price;
+            Price = p.Price.ToString("F2");
             Quantity = p.Quantity;
 
             return this;
