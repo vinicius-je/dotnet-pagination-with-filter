@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using StockApi.Domain.Entities;
 
 namespace StockApi.Infrastructure.Context
 {
@@ -10,5 +11,7 @@ namespace StockApi.Infrastructure.Context
         {
             modelBuilder.ApplyConfigurationsFromAssembly(GetType().Assembly);
         }
+
+        public DbSet<Product> Products { get; set; }
     }
 }
