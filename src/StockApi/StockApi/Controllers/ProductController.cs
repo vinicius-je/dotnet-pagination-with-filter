@@ -16,7 +16,7 @@ namespace StockApi.Controllers
             _productRepository = productRepository;
         }
 
-        [HttpGet("")]
+        [HttpGet]
         public async Task<IActionResult> GetProductsWithPagination(
             [FromQuery] Dictionary<string, string>? filters,
             [FromQuery] int pageNumber = 1,
@@ -32,6 +32,7 @@ namespace StockApi.Controllers
                 return BadRequest(new ApiResponse<ProductDto>(400, "Error: the page size can not be equals or below zero"));
             }
 
+            // Remove the pageNumber and pageSize from filter
             if (filters is not null && filters.Count >= 2)
             {
                 filters.Remove("pageNumber");
