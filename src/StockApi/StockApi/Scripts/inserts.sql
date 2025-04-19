@@ -1,8 +1,8 @@
 ﻿
-IF NOT EXISTS (SELECT * FROM Product)
+IF NOT EXISTS (SELECT * FROM Products)
 BEGIN
 
-	INSERT INTO [StockDb].[dbo].[Product] ([Id], [Name], [Description], [Price], [Category], [Quantity])
+	INSERT INTO [StockDb].[dbo].[Products] ([Id], [Name], [Description], [Price], [Category], [Quantity])
 	VALUES 
 	  (NEWID(), 'Laptop Dell XPS 13', 'Ultrabook com processador Intel i7 e SSD de 512GB', 8999.99, 1, 10), -- Electronics
 	  (NEWID(), 'Smartphone Samsung Galaxy S23', 'Celular Android com câmera de 50MP', 5999.90, 1, 25), -- Electronics
@@ -18,7 +18,7 @@ BEGIN
 	  (NEWID(), 'Óleo Sintético Mobil 1 5W30', 'Óleo sintético para motor de alto desempenho', 89.90, 9, 60), -- Automotive
 	  (NEWID(), 'Kit de Suplementos Whey Protein', 'Whey Protein + BCAA + Creatina', 299.90, 10, 25); -- Health
 
-	INSERT INTO [StockDb].[dbo].[Product] ([Id], [Name], [Description], [Price], [Category], [Quantity])
+	INSERT INTO [StockDb].[dbo].[Products] ([Id], [Name], [Description], [Price], [Category], [Quantity])
 	VALUES 
 	  -- Eletrônicos (1)
 	  (NEWID(), 'iPhone 15 Pro', 'Smartphone Apple com chip A17 Pro', 8999.99, 1, 30),
