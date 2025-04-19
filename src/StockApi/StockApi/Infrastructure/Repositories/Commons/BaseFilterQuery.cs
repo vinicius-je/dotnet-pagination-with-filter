@@ -9,6 +9,12 @@ namespace StockApi.Infrastructure.Repositories.Commons
         IFilterQuery<TBaseEntity>
         where TBaseEntity : BaseEntity
     {
+        /// <summary>
+        /// Set the Filter Expression of the Query
+        /// </summary>
+        /// <param name="query">The base query to be executed.</param>
+        /// <param name="filters">An object containing the filtering criteria for the query.</param>
+        /// <returns>Returns a IQueryable of Entity to execute query.</returns>
         public IQueryable<TBaseEntity> Filter(IQueryable<TBaseEntity> query, Dictionary<string, string> filters)
         {
             foreach (var filter in filters)
@@ -41,6 +47,13 @@ namespace StockApi.Infrastructure.Repositories.Commons
             return query;
         }
 
+        /// <summary>
+        /// Set the query condition based on property type.
+        /// </summary>
+        /// <param name="property">Entity property type.</param>
+        /// <param name="propertyAccess">Entity property.</param>
+        /// <param name="constant">Constante expression</param>
+        /// <returns>Expression configured to condition based on property type.</returns>
         private static Expression SetQueryConditionFilter(PropertyInfo property, MemberExpression propertyAccess, ConstantExpression constant)
         {
             Expression condition;
@@ -52,6 +65,17 @@ namespace StockApi.Infrastructure.Repositories.Commons
                 // Ex: x.Property.Contains(value)
                 condition = Expression.Call(propertyAccess, containsMethod, constant);
             }
+            else if (property.PropertyType == typeof(DateTimeOffset))
+            {
+                DateTimeOffset startDate = DateTimeOffset.Parse(constant.Value!.ToString()!).Date;
+                DateTimeOffset endDate = startDate.AddDays(1);
+
+                // Set DateTime query based on interval of time
+                condition = Expression.AndAlso(
+                    Expression.GreaterThanOrEqual(propertyAccess, Expression.Constant(startDate)),
+                    Expression.LessThan(propertyAccess, Expression.Constant(endDate))
+                );
+            }
             else
             {
                 // Set the Equals method in the lamda expression
@@ -61,20 +85,30 @@ namespace StockApi.Infrastructure.Repositories.Commons
             return condition;
         }
 
+        /// <summary>
+        /// Convert value type based on entity property type.
+        /// </summary>
+        /// <param name="filters">An object containing the filtering criteria for the query.</param>
+        /// <param name="property">PropertyInfo of entity.</param>
+        /// <returns>Object type of entity property.</returns>
         private static object ConvertTypeValue(KeyValuePair<string, string> filter, PropertyInfo property)
         {
-            object? convertedValue = null;
-
             if (property.PropertyType.IsEnum)
             {
-                convertedValue = Enum.Parse(property.PropertyType, filter.Value, true);
-            }
-            else
-            {
-                convertedValue = Convert.ChangeType(filter.Value, property.PropertyType);
+                return Enum.Parse(property.PropertyType, filter.Value, true);
             }
 
-            return convertedValue;
+            if (property.PropertyType == typeof(DateTimeOffset))
+            {
+                return DateTimeOffset.Parse(filter.Value);
+            }
+
+            if (property.PropertyType == typeof(Guid))
+            {
+                return Guid.Parse(filter.Value);
+            }
+
+            return Convert.ChangeType(filter.Value, property.PropertyType);
         }
     }
 }

@@ -16,7 +16,12 @@
             PageNumber = pageNumber;
             PageSize = pageSize;
             TotalRecords = totalRecords;
-            TotalPages = (int)Math.Ceiling((decimal)totalRecords / (decimal)pageSize);
+            TotalPages = CalculeTotalPages(totalRecords, pageSize);
+        }
+
+        public int CalculeTotalPages(int totalRecords, int pageSize)
+        {
+            return totalRecords == 0 ? totalRecords : (int)Math.Ceiling((decimal)totalRecords / (decimal)pageSize);
         }
     }
 }

@@ -1,11 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using StockApi.Domain.Entities;
 using StockApi.Infrastructure.Context;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace StockApi.Tests.Fixtures
 {
@@ -19,11 +14,11 @@ namespace StockApi.Tests.Fixtures
 
             // Seed data
             Context.Products.AddRange(
-                new Product { Id = new Guid(), Name = "Product 1", Price = 10.50m, Category = ProductCategoryEnum.Electronics, Quantity = 5 },
-                new Product { Id = new Guid(), Name = "Product 2", Price = 20.75m, Category = ProductCategoryEnum.Electronics, Quantity = 10 },
-                new Product { Id = new Guid(), Name = "Product 3", Price = 15.99m, Category = ProductCategoryEnum.Clothing, Quantity = 15 },
-                new Product { Id = new Guid(), Name = "Product 4", Price = 25.99m, Category = ProductCategoryEnum.Clothing, Quantity = 8 },
-                new Product { Id = new Guid(), Name = "Product 5", Price = 5.99m, Category = ProductCategoryEnum.Toys, Quantity = 20 }
+                new Product { Id = new Guid(), Name = "Product 1", Price = decimal.Parse("10.50"), Category = ProductCategoryEnum.Electronics, Quantity = 5 },
+                new Product { Id = new Guid(), Name = "Product 2", Price = decimal.Parse("20.75"), Category = ProductCategoryEnum.Electronics, Quantity = 10 },
+                new Product { Id = new Guid(), Name = "Product 3", Price = decimal.Parse("15.50"), Category = ProductCategoryEnum.Clothing, Quantity = 15 },
+                new Product { Id = new Guid(), Name = "Product 4", Price = decimal.Parse("25.50"), Category = ProductCategoryEnum.Clothing, Quantity = 8 },
+                new Product { Id = new Guid(), Name = "Product 5", Price = decimal.Parse("5.99"), Category = ProductCategoryEnum.Toys, Quantity = 20 }
             );
             Context.SaveChanges();
         }

@@ -14,7 +14,6 @@ namespace StockApi.Infrastructure.Repositories.Commons
         IFilterQuery<TBaseEntity>
         where TBaseEntity : BaseEntity
         where TDto : BaseDto, new()
-
     {
         protected readonly AppDbContext _context;
         protected readonly DbSet<TBaseEntity> _dbSet;
@@ -25,6 +24,13 @@ namespace StockApi.Infrastructure.Repositories.Commons
             _dbSet = _context.Set<TBaseEntity>();
         }
 
+        /// <summary>
+        /// Returns records in a pagination structure, based on the filter
+        /// </summary>
+        /// <param name="pageNumber">The number of the page to retrieve (starting from 1).</param>
+        /// <param name="pageSize">The number of records per page.</param>
+        /// <param name="filters">An object containing the filtering criteria for the query.</param>
+        /// <returns>Returns a PaginationResponse with records that match the specified filters.</returns>
         public async Task<PaginationResponse<TDto>> Pagination(int pageNumber, int pageSize, Dictionary<string, string>? filters)
         {
             var query = _dbSet.AsQueryable();
@@ -35,20 +41,34 @@ namespace StockApi.Infrastructure.Repositories.Commons
             }
 
             var totalRecords = await query.CountAsync();
+            var records = await ExecuteQuery(query, pageNumber, pageSize);
+            return new PaginationResponse<TDto>(records, pageNumber, pageSize, totalRecords);
+        }
 
-            var products = await query
+        /// <summary>
+        /// Convert the Entity to his DTO
+        /// </summary>
+        /// <returns>Lambda exression which convert Entity to DTO</returns>
+        protected virtual Expression<Func<TBaseEntity, TDto>> ConvertToDto()
+        {
+            return x => (TDto)new TDto().ConvertToDto(x);
+        }
+
+        /// <summary>
+        /// Executes a paginated query against the provided IQueryable source and converts the results to DTOs.
+        /// </summary>
+        /// <param name="query">The base query to be executed.</param>
+        /// <param name="pageNumber">The number of the page to retrieve (starting from 1).</param>
+        /// <param name="pageSize">The number of records to include per page.</param>
+        /// <returns>A task that represents the asynchronous operation, containing a paginated list of DTOs.</returns>
+        protected virtual async Task<List<TDto>> ExecuteQuery(IQueryable<TBaseEntity> query, int pageNumber, int pageSize)
+        {
+            return await query
                 .AsNoTracking()
-                .Select(MapToProductDto())
+                .Select(ConvertToDto())
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
-
-            return new PaginationResponse<TDto>(products, pageNumber, pageSize, totalRecords);
-        }
-
-        private Expression<Func<TBaseEntity, TDto>> MapToProductDto()
-        {
-            return x => (TDto)new TDto().ConvertToDto(x);
         }
     }
 }

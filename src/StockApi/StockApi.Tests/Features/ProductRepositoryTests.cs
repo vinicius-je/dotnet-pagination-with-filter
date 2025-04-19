@@ -40,4 +40,77 @@ public class ProductRepositoryTests
         Assert.That(response.HasNextPage, Is.False);
         Assert.That(response.HasPreviousPage, Is.False);   
     }
+
+    [Test]
+    public async Task GetProductsWithPagination_FilterByAutomotiveCategory_ReturnsEmptyPaginatedResults()
+    {
+        // Arrange
+        int pageNumber = 1;
+        int pageSize = 5;
+        Dictionary<string, string> filters = new Dictionary<string, string>() {{ "Category", "Automotive" }};
+        // Configure Context Fixture for this test
+        using var fixture = ConfigureFixture("GetProductsWithPagination_ReturnsCorrectPaginatedResults_Db");
+
+        // Create repository with the real context
+        var repository = new ProductRepository(fixture.Context);
+
+        // Act
+        var response = await repository.GetProductsWithPaginationAndFilter(pageNumber, pageSize, filters);
+
+        // Asset
+        Assert.That(pageNumber, Is.EqualTo(response.PageNumber));
+        Assert.That(pageSize, Is.EqualTo(response.PageSize));
+        Assert.That(response.Data, Has.Count.EqualTo(0));
+        Assert.That(response.HasNextPage, Is.False);
+        Assert.That(response.HasPreviousPage, Is.False);
+    }
+
+    [Test]
+    public async Task GetProductsWithPagination_FilterByProductName_ReturnsCorrectPaginatedResults()
+    {
+        // Arrange
+        int pageNumber = 1;
+        int pageSize = 5;
+        Dictionary<string, string> filters = new Dictionary<string, string>() {{ "Name", "Product 3" }};
+        // Configure Context Fixture for this test
+        using var fixture = ConfigureFixture("GetProductsWithPagination_ReturnsCorrectPaginatedResults_Db");
+
+        // Create repository with the real context
+        var repository = new ProductRepository(fixture.Context);
+
+        // Act
+        var response = await repository.GetProductsWithPaginationAndFilter(pageNumber, pageSize, filters);
+
+        // Asset
+        Assert.That(pageNumber, Is.EqualTo(response.PageNumber));
+        Assert.That(pageSize, Is.EqualTo(response.PageSize));
+        Assert.That(response.Data, Has.Count.EqualTo(1));
+        Assert.That(response.HasNextPage, Is.False);
+        Assert.That(response.HasPreviousPage, Is.False);
+    }
+
+    [Test]
+    public async Task GetProductsWithPagination_FilterByProductNameAndPrice_ReturnsCorrectPaginatedResults()
+    {
+        // Arrange
+        int pageNumber = 1;
+        int pageSize = 5;
+        Dictionary<string, string> filters = new Dictionary<string, string>() 
+        { { "Name", "Product 5" }, { "Price", "5.99" } };
+        // Configure Context Fixture for this test
+        using var fixture = ConfigureFixture("GetProductsWithPagination_ReturnsCorrectPaginatedResults_Db");
+
+        // Create repository with the real context
+        var repository = new ProductRepository(fixture.Context);
+
+        // Act
+        var response = await repository.GetProductsWithPaginationAndFilter(pageNumber, pageSize, filters);
+
+        // Asset
+        Assert.That(pageNumber, Is.EqualTo(response.PageNumber));
+        Assert.That(pageSize, Is.EqualTo(response.PageSize));
+        Assert.That(response.Data, Has.Count.EqualTo(1));
+        Assert.That(response.HasNextPage, Is.False);
+        Assert.That(response.HasPreviousPage, Is.False);
+    }
 }

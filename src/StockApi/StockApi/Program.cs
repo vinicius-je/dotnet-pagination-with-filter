@@ -13,7 +13,7 @@ builder.Services.AddSwaggerGen();
 // Database Condiguration
 builder.Services.ConfigureDbExtension(builder.Configuration);
 
-// CORS, Allow All
+// CORS, Allow Any Origin for test
 builder.Services.AddCors(opt =>
 {
     opt.AddDefaultPolicy(builder => builder
