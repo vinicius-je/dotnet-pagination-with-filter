@@ -143,6 +143,12 @@ namespace StockApi.Infrastructure.Repositories.Commons
         IFilterQuery<TBaseEntity>
         where TBaseEntity : BaseEntity
     {
+        /// <summary>
+        /// Set the Filter Expression of the Query
+        /// </summary>
+        /// <param name="query">The base query to be executed.</param>
+        /// <param name="filters">An object containing the filtering criteria for the query.</param>
+        /// <returns>Returns a IQueryable of Entity to execute query.</returns>
         public IQueryable<TBaseEntity> Filter(IQueryable<TBaseEntity> query, Dictionary<string, string> filters)
         {
             foreach (var filter in filters)
@@ -175,6 +181,13 @@ namespace StockApi.Infrastructure.Repositories.Commons
             return query;
         }
 
+        /// <summary>
+        /// Set the query condition based on property type.
+        /// </summary>
+        /// <param name="property">Entity property type.</param>
+        /// <param name="propertyAccess">Entity property.</param>
+        /// <param name="constant">Constante expression</param>
+        /// <returns>Expression configured to condition based on property type.</returns>
         private static Expression SetQueryConditionFilter(PropertyInfo property, MemberExpression propertyAccess, ConstantExpression constant)
         {
             Expression condition;
@@ -186,6 +199,17 @@ namespace StockApi.Infrastructure.Repositories.Commons
                 // Ex: x.Property.Contains(value)
                 condition = Expression.Call(propertyAccess, containsMethod, constant);
             }
+            else if (property.PropertyType == typeof(DateTimeOffset))
+            {
+                DateTimeOffset startDate = DateTimeOffset.Parse(constant.Value!.ToString()!).Date;
+                DateTimeOffset endDate = startDate.AddDays(1);
+
+                // Set DateTime query based on interval of time
+                condition = Expression.AndAlso(
+                    Expression.GreaterThanOrEqual(propertyAccess, Expression.Constant(startDate)),
+                    Expression.LessThan(propertyAccess, Expression.Constant(endDate))
+                );
+            }
             else
             {
                 // Set the Equals method in the lamda expression
@@ -195,20 +219,30 @@ namespace StockApi.Infrastructure.Repositories.Commons
             return condition;
         }
 
+        /// <summary>
+        /// Convert value type based on entity property type.
+        /// </summary>
+        /// <param name="filters">An object containing the filtering criteria for the query.</param>
+        /// <param name="property">PropertyInfo of entity.</param>
+        /// <returns>Object type of entity property.</returns>
         private static object ConvertTypeValue(KeyValuePair<string, string> filter, PropertyInfo property)
         {
-            object? convertedValue = null;
-
             if (property.PropertyType.IsEnum)
             {
-                convertedValue = Enum.Parse(property.PropertyType, filter.Value, true);
-            }
-            else
-            {
-                convertedValue = Convert.ChangeType(filter.Value, property.PropertyType);
+                return Enum.Parse(property.PropertyType, filter.Value, true);
             }
 
-            return convertedValue;
+            if (property.PropertyType == typeof(DateTimeOffset))
+            {
+                return DateTimeOffset.Parse(filter.Value);
+            }
+
+            if (property.PropertyType == typeof(Guid))
+            {
+                return Guid.Parse(filter.Value);
+            }
+
+            return Convert.ChangeType(filter.Value, property.PropertyType);
         }
     }
 }
@@ -231,7 +265,6 @@ namespace StockApi.Infrastructure.Repositories.Commons
         IFilterQuery<TBaseEntity>
         where TBaseEntity : BaseEntity
         where TDto : BaseDto, new()
-
     {
         protected readonly AppDbContext _context;
         protected readonly DbSet<TBaseEntity> _dbSet;
@@ -242,6 +275,13 @@ namespace StockApi.Infrastructure.Repositories.Commons
             _dbSet = _context.Set<TBaseEntity>();
         }
 
+        /// <summary>
+        /// Returns records in a pagination structure, based on the filter
+        /// </summary>
+        /// <param name="pageNumber">The number of the page to retrieve (starting from 1).</param>
+        /// <param name="pageSize">The number of records per page.</param>
+        /// <param name="filters">An object containing the filtering criteria for the query.</param>
+        /// <returns>Returns a PaginationResponse with records that match the specified filters.</returns>
         public async Task<PaginationResponse<TDto>> Pagination(int pageNumber, int pageSize, Dictionary<string, string>? filters)
         {
             var query = _dbSet.AsQueryable();
@@ -252,20 +292,34 @@ namespace StockApi.Infrastructure.Repositories.Commons
             }
 
             var totalRecords = await query.CountAsync();
+            var records = await ExecuteQuery(query, pageNumber, pageSize);
+            return new PaginationResponse<TDto>(records, pageNumber, pageSize, totalRecords);
+        }
 
-            var products = await query
+        /// <summary>
+        /// Convert the Entity to his DTO
+        /// </summary>
+        /// <returns>Lambda exression which convert Entity to DTO</returns>
+        protected virtual Expression<Func<TBaseEntity, TDto>> ConvertToDto()
+        {
+            return x => (TDto)new TDto().ConvertToDto(x);
+        }
+
+        /// <summary>
+        /// Executes a paginated query against the provided IQueryable source and converts the results to DTOs.
+        /// </summary>
+        /// <param name="query">The base query to be executed.</param>
+        /// <param name="pageNumber">The number of the page to retrieve (starting from 1).</param>
+        /// <param name="pageSize">The number of records to include per page.</param>
+        /// <returns>A task that represents the asynchronous operation, containing a paginated list of DTOs.</returns>
+        protected virtual async Task<List<TDto>> ExecuteQuery(IQueryable<TBaseEntity> query, int pageNumber, int pageSize)
+        {
+            return await query
                 .AsNoTracking()
-                .Select(MapToProductDto())
+                .Select(ConvertToDto())
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
-
-            return new PaginationResponse<TDto>(products, pageNumber, pageSize, totalRecords);
-        }
-
-        private Expression<Func<TBaseEntity, TDto>> MapToProductDto()
-        {
-            return x => (TDto)new TDto().ConvertToDto(x);
         }
     }
 }
