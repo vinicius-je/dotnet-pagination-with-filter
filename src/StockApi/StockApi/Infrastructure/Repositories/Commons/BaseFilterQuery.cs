@@ -19,8 +19,10 @@ namespace StockApi.Infrastructure.Repositories.Commons
         {
             foreach (var filter in filters)
             {
+                // Set the first letter of the Property to Uppercase
+                var filterProperty = string.Concat(filter.Key.First().ToString().ToUpper(), filter.Key.AsSpan(1));
                 // Product Property
-                var property = typeof(TBaseEntity).GetProperty(filter.Key);
+                var property = typeof(TBaseEntity).GetProperty(filterProperty);
 
                 if (property == null || filter.Value == null)
                 {
