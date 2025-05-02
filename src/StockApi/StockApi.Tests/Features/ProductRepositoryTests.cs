@@ -8,6 +8,15 @@ namespace StockApi.Tests;
 [TestFixture]
 public class ProductRepositoryTests
 {
+    private ProductRepository _repository;
+
+    public ProductRepositoryTests()
+    {
+        // Configure Context Fixture for this test
+        var fixture = ConfigureFixture("GetProductsWithPagination_Database");
+        // Create repository with the real context
+        _repository = new ProductRepository(fixture.Context);
+    }
 
     public ProductRepositoryTestFixture ConfigureFixture(string dataBaseName)
     {
@@ -24,14 +33,9 @@ public class ProductRepositoryTests
         // Arrange
         int pageNumber = 1;
         int pageSize = 5;
-        // Configure Context Fixture for this test
-        using var fixture = ConfigureFixture("GetProductsWithPagination_ReturnsCorrectPaginatedResults_Db");
-
-        // Create repository with the real context
-        var repository = new ProductRepository(fixture.Context);
 
         // Act
-        var response = await repository.GetProductsWithPaginationAndFilter(pageNumber, pageSize, null);
+        var response = await _repository.GetProductsWithPaginationAndFilter(pageNumber, pageSize, null);
 
         // Asset
         Assert.That(pageNumber, Is.EqualTo(response.PageNumber));
@@ -48,14 +52,9 @@ public class ProductRepositoryTests
         int pageNumber = 1;
         int pageSize = 5;
         Dictionary<string, string> filters = new Dictionary<string, string>() {{ "Category", "Automotive" }};
-        // Configure Context Fixture for this test
-        using var fixture = ConfigureFixture("GetProductsWithPagination_ReturnsCorrectPaginatedResults_Db");
-
-        // Create repository with the real context
-        var repository = new ProductRepository(fixture.Context);
 
         // Act
-        var response = await repository.GetProductsWithPaginationAndFilter(pageNumber, pageSize, filters);
+        var response = await _repository.GetProductsWithPaginationAndFilter(pageNumber, pageSize, filters);
 
         // Asset
         Assert.That(pageNumber, Is.EqualTo(response.PageNumber));
@@ -72,14 +71,9 @@ public class ProductRepositoryTests
         int pageNumber = 1;
         int pageSize = 5;
         Dictionary<string, string> filters = new Dictionary<string, string>() {{ "Name", "Product 3" }};
-        // Configure Context Fixture for this test
-        using var fixture = ConfigureFixture("GetProductsWithPagination_ReturnsCorrectPaginatedResults_Db");
-
-        // Create repository with the real context
-        var repository = new ProductRepository(fixture.Context);
 
         // Act
-        var response = await repository.GetProductsWithPaginationAndFilter(pageNumber, pageSize, filters);
+        var response = await _repository.GetProductsWithPaginationAndFilter(pageNumber, pageSize, filters);
 
         // Asset
         Assert.That(pageNumber, Is.EqualTo(response.PageNumber));
@@ -97,14 +91,9 @@ public class ProductRepositoryTests
         int pageSize = 5;
         Dictionary<string, string> filters = new Dictionary<string, string>() 
         { { "Name", "Product 5" }, { "Price", "5.99" } };
-        // Configure Context Fixture for this test
-        using var fixture = ConfigureFixture("GetProductsWithPagination_ReturnsCorrectPaginatedResults_Db");
-
-        // Create repository with the real context
-        var repository = new ProductRepository(fixture.Context);
 
         // Act
-        var response = await repository.GetProductsWithPaginationAndFilter(pageNumber, pageSize, filters);
+        var response = await _repository.GetProductsWithPaginationAndFilter(pageNumber, pageSize, filters);
 
         // Asset
         Assert.That(pageNumber, Is.EqualTo(response.PageNumber));
